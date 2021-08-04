@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -29,9 +30,11 @@ namespace Remipedia.Modules
 
             var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id;
             var inPath = tmpPath + extension;
-            var outPath = inPath + $"_vgg-conv_{layer}_000000.jpg";
+            var outPath = tmpPath + $"_vgg-conv_{layer}_000000.jpg";
             File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
 
+            var args = $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters 4";
+            Console.WriteLine(new LogMessage(LogSeverity.Info, "Dream", "darnet " + args));
             Process.Start("darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters 4").WaitForExit();
 
             await Context.Channel.SendFileAsync(outPath);
