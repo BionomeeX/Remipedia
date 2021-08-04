@@ -35,7 +35,7 @@ namespace Remipedia.Modules
 
             var args = $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters 4";
             Console.WriteLine(new LogMessage(LogSeverity.Info, "Dream", "darnet " + args));
-            Process.Start("darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters 4").WaitForExit();
+            Process.Start("darknet", args).WaitForExit();
 
             await Context.Channel.SendFileAsync(outPath);
 
