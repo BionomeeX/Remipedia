@@ -47,7 +47,7 @@ namespace Remipedia.Modules
             var outPath = tmpPath + $"_vgg-conv_{layer}_000000.jpg";
             File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
 
-            var msg = await ReplyAsync("Your image is processing, this can take up to a few minutes");
+            var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
 
             var args = $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters {iters} - range {range}";
             Console.WriteLine(new LogMessage(LogSeverity.Info, "Dream", "darknet " + args));
