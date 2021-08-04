@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +16,20 @@ namespace Remipedia.Modules
                 await ReplyAsync("You need to provide an image");
                 return;
             }
-            var fi = new FileInfo(Context.Message.Attachments.ElementAt(0).Url);
-            if (fi.Extension != ".png" && fi.Extension != ".jpg" && fi.Extension != ".jpeg")
+            var url = Context.Message.Attachments.ElementAt(0).Url;
+            var extension = Path.GetExtension(url);
+            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
             {
                 await ReplyAsync("Invalid file type");
                 return;
             }
+
+            var path = DateTime.Now.ToString("HHmmssff") + Context.User.Id + extension;
+            File.WriteAllBytes(path, await StaticObjects.HttpClient.GetByteArrayAsync(url));
+
+            await Context.Channel.SendFileAsync(path);
+
+            File.Delete(path);
         }
     }
 }

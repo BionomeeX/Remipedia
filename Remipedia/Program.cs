@@ -68,7 +68,7 @@ namespace Remipedia
                 return;
             }
             int pos = 0;
-            if (msg.HasMentionPrefix(_client.CurrentUser, ref pos) || msg.HasStringPrefix("c.", ref pos))
+            if (msg.HasMentionPrefix(_client.CurrentUser, ref pos) || msg.HasStringPrefix("r.", ref pos))
             {
                 SocketCommandContext context = new(_client, msg);
                 var result = await _commands.ExecuteAsync(context, pos, null);
