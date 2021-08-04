@@ -20,29 +20,26 @@ namespace Remipedia.Modules
         }
 
         [Command("Dream", RunMode = RunMode.Async)]
-        public async Task DreamAsync(int layer = 10, int iters = 10, int range = 1)
+        public async Task DreamAsync(string url, int layer = 10, int iters = 10, int range = 1)
         {
-            if(layer > 18 || layer < 1){
+            if (layer > 18 || layer < 1)
+            {
                 await ReplyAsync("Invalid layer argument (must be between 1 and 18)");
                 return;
             }
 
-            if(iters > 100 || iters < 0){
+            if (iters > 100 || iters < 0)
+            {
                 await ReplyAsync("Invalid iters argument (must be between 0 and 100)");
                 return;
             }
 
-            if(range > 19 - layer || range < 0){
+            if (range > 19 - layer || range < 0)
+            {
                 await ReplyAsync("Invalid range argument (must be between 1 and 19 - layer)");
                 return;
             }
 
-            if (Context.Message.Attachments.Count == 0)
-            {
-                await ReplyAsync("You need to provide an image");
-                return;
-            }
-            var url = Context.Message.Attachments.ElementAt(0).Url;
             var extension = Path.GetExtension(url);
             if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
             {
@@ -67,6 +64,18 @@ namespace Remipedia.Modules
 
             File.Delete(inPath);
             File.Delete(outPath);
+        }
+
+        [Command("Dream", RunMode = RunMode.Async), Priority(1)]
+        public async Task DreamAsync(int layer = 10, int iters = 10, int range = 1)
+        {
+            if (Context.Message.Attachments.Count == 0)
+            {
+                await ReplyAsync("You need to provide an image");
+                return;
+            }
+            var url = Context.Message.Attachments.ElementAt(0).Url;
+            await DreamAsync(url, layer, iters, range);
         }
     }
 }
