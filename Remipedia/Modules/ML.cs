@@ -43,7 +43,7 @@ namespace Remipedia.Modules
             var extension = Path.GetExtension(url);
             if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
             {
-                await ReplyAsync("Invalid file type");
+                await ReplyAsync("Invalid file type " + extension);
                 return;
             }
 
