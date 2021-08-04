@@ -28,7 +28,7 @@ namespace Remipedia.Modules
 
             var layer = 16;
 
-            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id;
+            var tmpPath = "Images/" + DateTime.Now.ToString("HHmmssff") + Context.User.Id;
             var inPath = tmpPath + extension;
             var outPath = tmpPath + $"_vgg-conv_{layer}_000000.jpg";
             File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
