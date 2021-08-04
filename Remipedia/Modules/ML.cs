@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,12 +25,19 @@ namespace Remipedia.Modules
                 return;
             }
 
-            var path = DateTime.Now.ToString("HHmmssff") + Context.User.Id + extension;
-            File.WriteAllBytes(path, await StaticObjects.HttpClient.GetByteArrayAsync(url));
+            var layer = 16;
 
-            await Context.Channel.SendFileAsync(path);
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id;
+            var inPath = tmpPath + extension;
+            var outPath = inPath + $"_vgg-conv_{layer}_000000.jpg";
+            File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
 
-            File.Delete(path);
+            Process.Start("darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights {inPath} {layer} -iters 4").WaitForExit();
+
+            await Context.Channel.SendFileAsync(outPath);
+
+            File.Delete(inPath);
+            File.Delete(outPath);
         }
     }
 }
