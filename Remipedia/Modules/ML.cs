@@ -48,8 +48,8 @@ namespace Remipedia.Modules
             }
 
 
-            var tmpPath = "Images/" + DateTime.Now.ToString("HHmmssff") + Context.User.Id;
-            var inPath = tmpPath + extension;
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id;
+            var inPath = "Inputs/" + tmpPath + extension;
             var outPath = tmpPath + $"_vgg-conv_{layer}_000000.jpg";
             File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
 
