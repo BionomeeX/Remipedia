@@ -23,6 +23,18 @@ namespace Remipedia
 
         private Program()
         {
+            if (Directory.Exists("Images"))
+            {
+                foreach (var file in Directory.GetFiles("Images"))
+                {
+                    File.Delete(file);
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory("Images");
+            }
+
             _client.Log += (msg) =>
             {
                 Console.WriteLine(msg);
