@@ -78,7 +78,7 @@ namespace Remipedia.Modules
             var outPath = tmpPath + $".jpg";
 
             // Replace [INPATH] string in the command by the actual path
-            command = command.Replace("[INPATH]", inPath);
+            arguments = arguments.Replace("[INPATH]", inPath);
 
             // Download the image
             var bytes = await StaticObjects.HttpClient.GetByteArrayAsync(url);
