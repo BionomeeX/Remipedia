@@ -77,5 +77,50 @@ namespace Remipedia.Modules
             var url = Context.Message.Attachments.ElementAt(0).Url;
             await DreamAsync(url, layer, iters, range);
         }
+
+        [Command("Edge", RunMode = RunMode.Async)]
+        public async Task EdgeAsync(string url, double percentile = 99.7)
+        {
+            var extension = Path.GetExtension(url).Split('?')[0];
+            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
+            {
+                await ReplyAsync("Invalid file type " + extension);
+                return;
+            }
+
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id;
+            var inPath = "Inputs/" + tmpPath + extension;
+            var outPath = tmpPath + $"_ed.jpg";
+
+            File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
+            var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
+            var args = $"sobel.py -I {inPath} -p {percentile}";
+            Console.WriteLine(new LogMessage(LogSeverity.Info, "Edge", "python " + args));
+            Process.Start("python", args).WaitForExit();
+
+            await Context.Channel.SendFileAsync(outPath);
+            await msg.DeleteAsync();
+
+            File.Delete(inPath);
+            File.Delete(outPath);
+        }
+
+        [Command("Edge", RunMode = RunMode.Async), Priority(1)]
+        public async Task EdgeAsync(double percentile = 99.7)
+        {
+            if (percentile >= 100 || percentile <= 0)
+            {
+                await ReplyAsync("Invalid range argument (must be between 0 and 100)");
+                return;
+            }
+
+            if (Context.Message.Attachments.Count == 0)
+            {
+                await ReplyAsync("You need to provide an image");
+                return;
+            }
+            var url = Context.Message.Attachments.ElementAt(0).Url;
+            await EdgeAsync(url, percentile);
+        }
     }
 }
