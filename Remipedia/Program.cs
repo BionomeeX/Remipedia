@@ -23,6 +23,7 @@ namespace Remipedia
 
         private Program()
         {
+            // Image sent on Discord are placed in an "Inputs" folder
             if (Directory.Exists("Inputs"))
             {
                 foreach (var file in Directory.GetFiles("Inputs"))
@@ -34,6 +35,7 @@ namespace Remipedia
             {
                 Directory.CreateDirectory("Inputs");
             }
+            // Output images by the model are sometimes placed at the root
             foreach (var file in Directory.GetFiles(Directory.GetCurrentDirectory()))
             {
                 if (file.EndsWith(".jpg"))
@@ -69,6 +71,7 @@ namespace Remipedia
             _client.MessageReceived += HandleCommandAsync;
 
             await _commands.AddModuleAsync<ML>(null);
+            await _commands.AddModuleAsync<Information>(null);
 
             var credentials = JsonSerializer.Deserialize<Credentials>(File.ReadAllText("Keys/Credentials.json"), new JsonSerializerOptions
             {
