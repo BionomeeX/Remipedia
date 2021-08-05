@@ -31,7 +31,9 @@ namespace Remipedia.Modules
                 return;
             }
 
-            await LaunchMlCommand("dream", url, "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}");
+            await LaunchMlCommand("dream", url,
+                "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}",
+                $"_vgg-conv_{layer}_000000.jpg");
         }
 
         [Command("Dream", RunMode = RunMode.Async), Priority(1)]
@@ -48,7 +50,7 @@ namespace Remipedia.Modules
                 await ReplyAsync("Invalid range argument (must be between 0 and 100)");
                 return;
             }
-            await LaunchMlCommand("edge", url, "python", $"sobel.py -I [INPATH] -p {percentile}");
+            await LaunchMlCommand("edge", url, "python", $"sobel.py -I [INPATH] -p {percentile}", ".jpg");
         }
 
         [Command("Edge", RunMode = RunMode.Async), Priority(1)]
@@ -60,10 +62,12 @@ namespace Remipedia.Modules
         /// <summary>
         /// Start a machine learning process
         /// </summary>
+        /// <param name="discordCmdName">Name of the current Discord command</param>
         /// <param name="url">URL to the image to treat</param>
         /// <param name="command">Command name</param>
         /// <param name="arguments">Command arguments</param>
-        private async Task LaunchMlCommand(string discordCmdName, string url, string command, string arguments)
+        /// <param name="outpathEnd">End of the path for the output file, will be append to the current generated file name</param>
+        private async Task LaunchMlCommand(string discordCmdName, string url, string command, string arguments, string outpathEnd)
         {
             // Check if URL is a valid image
             var extension = Path.GetExtension(url).Split('?')[0];
@@ -75,7 +79,7 @@ namespace Remipedia.Modules
             // In and out paths the image will have
             var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + "_" + discordCmdName.ToLowerInvariant();
             var inPath = "Inputs/" + tmpPath + extension;
-            var outPath = tmpPath + $".jpg";
+            var outPath = tmpPath + outpathEnd;
 
             // Replace [INPATH] string in the command by the actual path
             arguments = arguments.Replace("[INPATH]", inPath);
