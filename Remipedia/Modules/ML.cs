@@ -31,7 +31,7 @@ namespace Remipedia.Modules
                 return;
             }
 
-            await LaunchMlCommand(url, "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}");
+            await LaunchMlCommand("dream", url, "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}");
         }
 
         [Command("Dream", RunMode = RunMode.Async), Priority(1)]
@@ -48,7 +48,7 @@ namespace Remipedia.Modules
                 await ReplyAsync("Invalid range argument (must be between 0 and 100)");
                 return;
             }
-            await LaunchMlCommand(url, "python", $"sobel.py -I [INPATH] -p {percentile}");
+            await LaunchMlCommand("edge", url, "python", $"sobel.py -I [INPATH] -p {percentile}");
         }
 
         [Command("Edge", RunMode = RunMode.Async), Priority(1)]
@@ -63,7 +63,7 @@ namespace Remipedia.Modules
         /// <param name="url">URL to the image to treat</param>
         /// <param name="command">Command name</param>
         /// <param name="arguments">Command arguments</param>
-        private async Task LaunchMlCommand(string url, string command, string arguments)
+        private async Task LaunchMlCommand(string discordCmdName, string url, string command, string arguments)
         {
             // Check if URL is a valid image
             var extension = Path.GetExtension(url).Split('?')[0];
@@ -73,7 +73,7 @@ namespace Remipedia.Modules
             }
 
             // In and out paths the image will have
-            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + "_" + command.ToLowerInvariant();
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + "_" + discordCmdName.ToLowerInvariant();
             var inPath = "Inputs/" + tmpPath + extension;
             var outPath = tmpPath + $".jpg";
 
@@ -91,7 +91,7 @@ namespace Remipedia.Modules
             try
             {
                 var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
-                Console.WriteLine(new LogMessage(LogSeverity.Info, command, command + " " + arguments));
+                Console.WriteLine(new LogMessage(LogSeverity.Info, discordCmdName, command + " " + arguments));
                 Process.Start(command, arguments).WaitForExit();
 
                 // When we are done, we delete the waiting message and post the modified image
