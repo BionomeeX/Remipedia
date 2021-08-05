@@ -64,7 +64,7 @@ namespace Remipedia
                         await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
                         {
                             Color = Color.Red,
-                            Title = msg.Exception.InnerException.GetType().ToString(),
+                            Title = ce.InnerException is FileNotFoundException ? "Could not find file" : msg.Exception.InnerException.GetType().ToString(),
                             Description = msg.Exception.InnerException.Message
                         }.Build());
                     }
