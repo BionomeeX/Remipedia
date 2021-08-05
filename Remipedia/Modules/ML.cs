@@ -81,7 +81,13 @@ namespace Remipedia.Modules
             command = command.Replace("[INPATH]", inPath);
 
             // Download the image
-            File.WriteAllBytes(inPath, await StaticObjects.HttpClient.GetByteArrayAsync(url));
+            var stream = await StaticObjects.HttpClient.GetStreamAsync(url);
+            if (stream.Length > 8_000_000)
+            {
+                throw new ArgumentException("Your image must be less than 8MB");
+            }
+            using var fs = new FileStream(inPath, FileMode.CreateNew);
+            await stream.CopyToAsync(fs);
             try
             {
                 var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
