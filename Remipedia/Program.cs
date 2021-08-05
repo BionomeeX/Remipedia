@@ -23,6 +23,7 @@ namespace Remipedia
 
         private Program()
         {
+            // Image sent on Discord are placed in an "Inputs" folder
             if (Directory.Exists("Inputs"))
             {
                 foreach (var file in Directory.GetFiles("Inputs"))
@@ -34,6 +35,7 @@ namespace Remipedia
             {
                 Directory.CreateDirectory("Inputs");
             }
+            // Output images by the model are sometimes placed at the root
             foreach (var file in Directory.GetFiles(Directory.GetCurrentDirectory()))
             {
                 if (file.EndsWith(".jpg"))
@@ -53,12 +55,19 @@ namespace Remipedia
 #if DEBUG
                 if (msg.Exception is CommandException ce)
                 {
-                    await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
+                    if (ce.InnerException is ArgumentException ae)
                     {
-                        Color = Color.Red,
-                        Title = msg.Exception.InnerException.GetType().ToString(),
-                        Description = msg.Exception.InnerException.Message
-                    }.Build());
+                        await ce.Context.Channel.SendMessageAsync(ae.Message);
+                    }
+                    else
+                    {
+                        await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
+                        {
+                            Color = Color.Red,
+                            Title = ce.InnerException is FileNotFoundException ? "Could not find file" : msg.Exception.InnerException.GetType().ToString(),
+                            Description = msg.Exception.InnerException.Message
+                        }.Build());
+                    }
                 }
 #endif
             };
@@ -69,6 +78,7 @@ namespace Remipedia
             _client.MessageReceived += HandleCommandAsync;
 
             await _commands.AddModuleAsync<ML>(null);
+            await _commands.AddModuleAsync<Information>(null);
 
             var credentials = JsonSerializer.Deserialize<Credentials>(File.ReadAllText("Keys/Credentials.json"), new JsonSerializerOptions
             {
