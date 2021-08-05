@@ -55,12 +55,19 @@ namespace Remipedia
 #if DEBUG
                 if (msg.Exception is CommandException ce)
                 {
-                    await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
+                    if (ce.InnerException is ArgumentException ae)
                     {
-                        Color = Color.Red,
-                        Title = msg.Exception.InnerException.GetType().ToString(),
-                        Description = msg.Exception.InnerException.Message
-                    }.Build());
+                        await ce.Context.Channel.SendMessageAsync(ae.Message);
+                    }
+                    else
+                    {
+                        await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
+                        {
+                            Color = Color.Red,
+                            Title = msg.Exception.InnerException.GetType().ToString(),
+                            Description = msg.Exception.InnerException.Message
+                        }.Build());
+                    }
                 }
 #endif
             };
