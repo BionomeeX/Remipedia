@@ -17,7 +17,8 @@ namespace Remipedia.TypeReader
             var second = GetColorValue(input[1]);
             var third = GetColorValue(input[2]);
 
-            if (!first.HasValue || !second.HasValue || !third.HasValue)
+            if (!first.HasValue || !second.HasValue || !third.HasValue
+                && first != second && second != first && first != third)
             {
                 return TypeReaderResult.FromError(CommandError.ParseFailed, "You must provide a string with 3 letters, containing either R, G or B");
             }

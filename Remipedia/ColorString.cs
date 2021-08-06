@@ -13,6 +13,11 @@
         public ColorValue Second { init; get; }
         public ColorValue Third { init; get; }
 
+        public override string ToString()
+        {
+            return ((int)First).ToString() + ((int)Second).ToString() + ((int)Third).ToString();
+        }
+
         public enum ColorValue
         {
             R,

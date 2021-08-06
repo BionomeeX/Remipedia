@@ -66,7 +66,7 @@ namespace Remipedia.Modules
             {
                 color = ColorString.Default;
             }
-            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH]", ".jpg");
+            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH] -c {color.ToString()}", ".jpg");
         }
 
         [Command("PCA", RunMode = RunMode.Async), Priority(1)]
