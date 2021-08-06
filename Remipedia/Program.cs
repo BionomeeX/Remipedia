@@ -79,10 +79,10 @@ namespace Remipedia
         {
             _client.MessageReceived += HandleCommandAsync;
 
+            _commands.AddTypeReader<ColorString>(new ColorStringReader());
+
             await _commands.AddModuleAsync<ML>(null);
             await _commands.AddModuleAsync<Information>(null);
-
-            _commands.AddTypeReader<ColorString>(new ColorStringReader());
 
             var credentials = JsonSerializer.Deserialize<Credentials>(File.ReadAllText("Keys/Credentials.json"), new JsonSerializerOptions
             {
