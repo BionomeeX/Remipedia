@@ -98,7 +98,7 @@ namespace Remipedia.Modules
             // In and out paths the image will have
             string[] inPaths = new string[url.Length];
             string[] outPaths = new string[url.Length];
-            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + "_" + discordCmdName.ToLowerInvariant();
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + StaticObjects.Random.Next(0, 99999) + "_" + discordCmdName.ToLowerInvariant();
 
             for (int i = 0; i < url.Length; i++)
             {
