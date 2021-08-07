@@ -33,7 +33,7 @@ namespace Remipedia.Modules
             }
 
             await LaunchMlCommand("dream", new[] { url },
-                "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}",
+                "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH 0] {layer} -iters {iters} -range {range}",
                 $"_vgg-conv_{layer}_000000.jpg");
         }
 
@@ -51,7 +51,7 @@ namespace Remipedia.Modules
                 await ReplyAsync("Invalid range argument (must be between 0 and 100)");
                 return;
             }
-            await LaunchMlCommand("edge", new[] { url }, "python", $"sobel.py -I [INPATH] -p {percentile}", ".jpg");
+            await LaunchMlCommand("edge", new[] { url }, "python", $"sobel.py -I [INPATH 0] -p {percentile}", ".jpg");
         }
 
         [Command("Edge", RunMode = RunMode.Async), Priority(1)]
@@ -63,7 +63,7 @@ namespace Remipedia.Modules
         [Command("Transfer", RunMode = RunMode.Async)]
         public async Task TransferAsync(string url1, string url2)
         {
-            await LaunchMlCommand("transfer", new[] { url1, url2 }, "python", "PROGRAMNAME.py -I [INPATH]", ".jpg");
+            await LaunchMlCommand("transfer", new[] { url1, url2 }, "python", "styletransfer.py -I [INPATH 0] -J [INPATH 1]", ".jpg");
         }
 
         [Command("Transfer", RunMode = RunMode.Async), Priority(1)]
@@ -76,7 +76,7 @@ namespace Remipedia.Modules
         [Command("PCA", RunMode = RunMode.Async)]
         public async Task PCAAsync(string url)
         {
-            await LaunchMlCommand("pca", new[] { url }, "python", $"pca.py -I [INPATH]", ".jpg");
+            await LaunchMlCommand("pca", new[] { url }, "python", $"pca.py -I [INPATH 0]", ".jpg");
         }
 
         [Command("PCA", RunMode = RunMode.Async), Priority(1)]
@@ -113,6 +113,9 @@ namespace Remipedia.Modules
                 inPaths[i] = $"Inputs/{tmpPath}_{i}{extension}";
                 outPaths[i] = tmpPath + "_" + i + outpathEnd;
 
+                // Replace [INPATH] string in the command by the actual path
+                arguments = arguments.Replace($"[INPATH {i}]", inPaths[i]);
+
                 // Download the image
                 var bytes = await StaticObjects.HttpClient.GetByteArrayAsync(url[i]);
                 if (bytes.Length > 8_000_000)
@@ -121,9 +124,6 @@ namespace Remipedia.Modules
                 }
                 File.WriteAllBytes(inPaths[i], bytes);
             }
-
-            // Replace [INPATH] string in the command by the actual path
-            arguments = arguments.Replace("[INPATH]", string.Join(" ", inPaths));
             try
             {
                 var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
