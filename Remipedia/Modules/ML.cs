@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -31,15 +32,15 @@ namespace Remipedia.Modules
                 return;
             }
 
-            await LaunchMlCommand("dream", url,
-                "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH] {layer} -iters {iters} - range {range}",
+            await LaunchMlCommand("dream", new[] { url },
+                "darknet", $"nightmare cfg/vgg-conv.cfg vgg-conv.weights [INPATH 0] {layer} -iters {iters} -range {range}",
                 $"_vgg-conv_{layer}_000000.jpg");
         }
 
         [Command("Dream", RunMode = RunMode.Async), Priority(1)]
         public async Task DreamAsync(int layer = 10, int iters = 10, int range = 1)
         {
-            await DreamAsync(GetAttachmentImage(), layer, iters, range);
+            await DreamAsync(GetAttachmentImage(1).ElementAt(0), layer, iters, range);
         }
 
         [Command("Edge", RunMode = RunMode.Async)]
@@ -50,13 +51,26 @@ namespace Remipedia.Modules
                 await ReplyAsync("Invalid range argument (must be between 0 and 100)");
                 return;
             }
-            await LaunchMlCommand("edge", url, "python", $"sobel.py -I [INPATH] -p {percentile}", ".jpg");
+            await LaunchMlCommand("edge", new[] { url }, "python", $"sobel.py -I [INPATH 0] -p {percentile}", ".jpg");
         }
 
         [Command("Edge", RunMode = RunMode.Async), Priority(1)]
         public async Task EdgeAsync(double percentile = 99.7)
         {
-            await EdgeAsync(GetAttachmentImage(), percentile);
+            await EdgeAsync(GetAttachmentImage(1).ElementAt(0), percentile);
+        }
+
+        [Command("Transfer", RunMode = RunMode.Async)]
+        public async Task TransferAsync(string url1, string url2)
+        {
+            await LaunchMlCommand("transfer", new[] { url1, url2 }, "python", "styletransfer.py -I [INPATH 0] -J [INPATH 1]", ".jpg");
+        }
+
+        [Command("Transfer", RunMode = RunMode.Async), Priority(1)]
+        public async Task TransferAsync()
+        {
+            var images = GetAttachmentImage(2);
+            await TransferAsync(images.ElementAt(0), images.ElementAt(1));
         }
 
         [Command("PCA", RunMode = RunMode.Async)]
@@ -66,13 +80,13 @@ namespace Remipedia.Modules
             {
                 color = ColorString.Default;
             }
-            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH] -c {color}", ".jpg");
+            await LaunchMlCommand("pca", new[] { url }, "python", $"pca.py -I [INPATH 0] -c {color}", ".jpg");
         }
 
         [Command("PCA", RunMode = RunMode.Async), Priority(1)]
         public async Task PCAAsync(ColorString color = null)
         {
-            await PCAAsync(GetAttachmentImage(), color);
+            await PCAAsync(GetAttachmentImage(1).ElementAt(0), color);
         }
 
         /// <summary>
@@ -83,30 +97,37 @@ namespace Remipedia.Modules
         /// <param name="command">Command name</param>
         /// <param name="arguments">Command arguments</param>
         /// <param name="outpathEnd">End of the path for the output file, will be append to the current generated file name</param>
-        private async Task LaunchMlCommand(string discordCmdName, string url, string command, string arguments, string outpathEnd)
+        private async Task LaunchMlCommand(string discordCmdName, string[] url, string command, string arguments, string outpathEnd)
         {
-            // Check if URL is a valid image
-            var extension = Path.GetExtension(url).Split('?')[0];
-            if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
-            {
-                throw new ArgumentException("Invalid file type " + extension);
-            }
-
             // In and out paths the image will have
-            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + "_" + discordCmdName.ToLowerInvariant();
-            var inPath = "Inputs/" + tmpPath + extension;
-            var outPath = tmpPath + outpathEnd;
+            string[] inPaths = new string[url.Length];
+            string[] outPaths = new string[url.Length];
+            var tmpPath = DateTime.Now.ToString("HHmmssff") + Context.User.Id + StaticObjects.Random.Next(0, 99999) + "_" + discordCmdName.ToLowerInvariant();
 
-            // Replace [INPATH] string in the command by the actual path
-            arguments = arguments.Replace("[INPATH]", inPath);
-
-            // Download the image
-            var bytes = await StaticObjects.HttpClient.GetByteArrayAsync(url);
-            if (bytes.Length > 8_000_000)
+            for (int i = 0; i < url.Length; i++)
             {
-                throw new ArgumentException("Your image must be less than 8MB");
+
+                // Check if URL is a valid image
+                var extension = Path.GetExtension(url[i]).Split('?')[0];
+                if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
+                {
+                    throw new ArgumentException("Invalid file type " + extension);
+                }
+
+                inPaths[i] = $"Inputs/{tmpPath}_{i}{extension}";
+                outPaths[i] = tmpPath + "_" + i + outpathEnd;
+
+                // Replace [INPATH] string in the command by the actual path
+                arguments = arguments.Replace($"[INPATH {i}]", inPaths[i]);
+
+                // Download the image
+                var bytes = await StaticObjects.HttpClient.GetByteArrayAsync(url[i]);
+                if (bytes.Length > 8_000_000)
+                {
+                    throw new ArgumentException("Your image must be less than 8MB");
+                }
+                File.WriteAllBytes(inPaths[i], bytes);
             }
-            File.WriteAllBytes(inPath, bytes);
             try
             {
                 var msg = await ReplyAsync("Your image is processed, this can take up to a few minutes");
@@ -114,17 +135,28 @@ namespace Remipedia.Modules
                 Process.Start(command, arguments).WaitForExit();
 
                 // When we are done, we delete the waiting message and post the modified image
-                await Context.Channel.SendFileAsync(outPath);
+                foreach (var oPath in outPaths)
+                {
+                    await Context.Channel.SendFileAsync(oPath);
+                }
                 await msg.DeleteAsync();
 
-                File.Delete(inPath);
-                File.Delete(outPath);
+                DeleteFiles(inPaths);
+                DeleteFiles(outPaths);
             }
             catch (Exception)
             {
-                File.Delete(inPath);
-                File.Delete(outPath);
+                DeleteFiles(inPaths);
+                DeleteFiles(outPaths);
                 throw;
+            }
+        }
+
+        public void DeleteFiles(string[] path)
+        {
+            foreach (var p in path)
+            {
+                File.Delete(p);
             }
         }
 
@@ -132,13 +164,14 @@ namespace Remipedia.Modules
         /// Get the file in attachment or throw an error if there are none
         /// </summary>
         /// <returns></returns>
-        private string GetAttachmentImage()
+        private IEnumerable<string> GetAttachmentImage(int count)
         {
-            if (Context.Message.Attachments.Count == 0)
+            if (Context.Message.Attachments.Count < count)
             {
-                throw new ArgumentException("You must provide an image");
+                throw new ArgumentException($"You must provide at least {count} image");
             }
-            return Context.Message.Attachments.ElementAt(0).Url;
+            return Enumerable.Range(0, count)
+                .Select(x => Context.Message.Attachments.ElementAt(x).Url);
         }
     }
 }
