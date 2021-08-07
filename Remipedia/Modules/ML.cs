@@ -60,15 +60,19 @@ namespace Remipedia.Modules
         }
 
         [Command("PCA", RunMode = RunMode.Async)]
-        public async Task PCAAsync(string url)
+        public async Task PCAAsync(string url, ColorString color = null)
         {
-            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH]", ".jpg");
+            if (color == null)
+            {
+                color = ColorString.Default;
+            }
+            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH] -c {color}", ".jpg");
         }
 
         [Command("PCA", RunMode = RunMode.Async), Priority(1)]
-        public async Task PCAAsync()
+        public async Task PCAAsync(ColorString color = null)
         {
-            await PCAAsync(GetAttachmentImage());
+            await PCAAsync(GetAttachmentImage(), color);
         }
 
         /// <summary>

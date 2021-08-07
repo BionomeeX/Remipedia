@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Remipedia.TypeReader;
 
 namespace Remipedia
 {
@@ -64,6 +65,7 @@ namespace Remipedia
                         await ce.Context.Channel.SendMessageAsync(embed: new EmbedBuilder
                         {
                             Color = Color.Red,
+                            // We don't log raw FileNotFoundException message because they may contains local path
                             Title = ce.InnerException is FileNotFoundException ? "Could not find file" : msg.Exception.InnerException.GetType().ToString(),
                             Description = msg.Exception.InnerException.Message
                         }.Build());
@@ -76,6 +78,8 @@ namespace Remipedia
         private async Task MainAsync()
         {
             _client.MessageReceived += HandleCommandAsync;
+
+            _commands.AddTypeReader<ColorString>(new ColorStringReader());
 
             await _commands.AddModuleAsync<ML>(null);
             await _commands.AddModuleAsync<Information>(null);
