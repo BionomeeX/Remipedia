@@ -73,6 +73,18 @@ namespace Remipedia.Modules
             await TransferAsync(images.ElementAt(0), images.ElementAt(1));
         }
 
+        [Command("PCA", RunMode = RunMode.Async)]
+        public async Task PCAAsync(string url)
+        {
+            await LaunchMlCommand("pca", url, "python", $"pca.py -I [INPATH]", ".jpg");
+        }
+
+        [Command("PCA", RunMode = RunMode.Async), Priority(1)]
+        public async Task PCAAsync()
+        {
+            await PCAAsync(GetAttachmentImage());
+        }
+
         /// <summary>
         /// Start a machine learning process
         /// </summary>
