@@ -140,15 +140,15 @@ namespace Remipedia.Modules
                     await Context.Channel.SendFileAsync(oPath);
                 }
                 await msg.DeleteAsync();
-
-                DeleteFiles(inPaths);
-                DeleteFiles(outPaths);
             }
             catch (Exception)
             {
+                throw;
+            }
+            finally
+            {
                 DeleteFiles(inPaths);
                 DeleteFiles(outPaths);
-                throw;
             }
         }
 
